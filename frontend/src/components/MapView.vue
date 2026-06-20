@@ -186,6 +186,13 @@ function handlePlanRoute() {
       >
         清除
       </button>
+      <button
+        v-if="store.hasSnapshot"
+        @click="store.restoreRoute()"
+        class="px-3 py-1 rounded text-xs font-medium bg-emerald-600 text-white shadow hover:opacity-90 transition"
+      >
+        ↩ 恢复
+      </button>
     </div>
   </div>
 </template>

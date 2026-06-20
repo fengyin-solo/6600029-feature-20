@@ -37,3 +37,11 @@ export interface DroneConfig {
   consumptionRate: number;  // mAh/min
   safeDistance: number;     // meters from obstacles
 }
+
+export interface RouteSnapshot {
+  waypoints: Waypoint[];
+  currentPlan: FlightPlan | null;
+  simProgress: number;
+  selectedAlgorithm: 'astar' | 'rrt';
+  timestamp: number;
+}

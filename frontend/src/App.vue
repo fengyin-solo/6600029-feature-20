@@ -17,6 +17,15 @@ function handlePlanRoute() {
   const last = store.waypoints[store.waypoints.length - 1];
   store.planRoute([first.lat, first.lng], [last.lat, last.lng]);
 }
+
+function formatSnapshotTime(ts: number): string {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const hh = d.getHours().toString().padStart(2, '0');
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const ss = d.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
 </script>
 
 <template>
@@ -115,6 +124,20 @@ function handlePlanRoute() {
           >
             🗑 清除航线
           </button>
+
+          <button
+            v-if="store.hasSnapshot"
+            @click="store.restoreRoute()"
+            class="w-full py-2 rounded text-xs font-medium bg-emerald-700 text-white hover:bg-emerald-600 transition"
+          >
+            ↩ 恢复航线（{{ formatSnapshotTime(store.snapshotTime) }} 暂存）
+          </button>
+          <p
+            v-if="store.hasSnapshot"
+            class="text-[10px] text-slate-400 text-center"
+          >
+            已暂存清除前的地图、剖面与统计数据，可一键找回
+          </p>
         </div>
 
         <!-- Flight stats -->

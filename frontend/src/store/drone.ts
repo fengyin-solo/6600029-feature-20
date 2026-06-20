@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Waypoint, NoFlyZone, TerrainPoint, FlightPlan, DroneConfig } from '../types';
+import type { Waypoint, NoFlyZone, TerrainPoint, FlightPlan, DroneConfig, RouteSnapshot } from '../types';
 import {
   aStarPathfind,
   rrtPathfind,
@@ -29,6 +29,8 @@ export const useDroneStore = defineStore('drone', () => {
     consumptionRate: 100,
     safeDistance: 30,
   });
+
+  const routeSnapshot = ref<RouteSnapshot | null>(null);
 
   // ─── Actions ──────────────────────────────────────────────────────────────
   function addWaypoint(
@@ -64,10 +66,34 @@ export const useDroneStore = defineStore('drone', () => {
     updatePlan();
   }
 
+  function cloneWaypoints(list: Waypoint[]): Waypoint[] {
+    return list.map((w) => ({ ...w }));
+  }
+
   function clearRoute() {
+    routeSnapshot.value = {
+      waypoints: cloneWaypoints(waypoints.value),
+      currentPlan: currentPlan.value
+        ? { ...currentPlan.value, waypoints: cloneWaypoints(currentPlan.value.waypoints) }
+        : null,
+      simProgress: simProgress.value,
+      selectedAlgorithm: selectedAlgorithm.value,
+      timestamp: Date.now(),
+    };
     waypoints.value = [];
     currentPlan.value = null;
     simProgress.value = 0;
+  }
+
+  function restoreRoute() {
+    const snap = routeSnapshot.value;
+    if (!snap) return;
+    waypoints.value = cloneWaypoints(snap.waypoints);
+    currentPlan.value = snap.currentPlan
+      ? { ...snap.currentPlan, waypoints: cloneWaypoints(snap.currentPlan.waypoints) }
+      : null;
+    simProgress.value = snap.simProgress;
+    selectedAlgorithm.value = snap.selectedAlgorithm;
   }
 
   function updatePlan() {
@@ -109,6 +135,12 @@ export const useDroneStore = defineStore('drone', () => {
   }
 
   // ─── Computed ─────────────────────────────────────────────────────────────
+  const hasSnapshot = computed(() => routeSnapshot.value !== null);
+
+  const snapshotTime = computed(() =>
+    routeSnapshot.value ? routeSnapshot.value.timestamp : 0
+  );
+
   const totalDistance = computed(() => {
     if (!currentPlan.value) return 0;
     return currentPlan.value.totalDistance;
@@ -156,6 +188,9 @@ export const useDroneStore = defineStore('drone', () => {
     isSimulating,
     simProgress,
     mapCenter,
+    routeSnapshot,
+    hasSnapshot,
+    snapshotTime,
     totalDistance,
     estimatedTime,
     batteryPercent,
@@ -165,6 +200,7 @@ export const useDroneStore = defineStore('drone', () => {
     updateWaypoint,
     planRoute,
     clearRoute,
+    restoreRoute,
     simulateFlight,
     loadMockData,
     exportPlan,
